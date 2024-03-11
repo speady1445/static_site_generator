@@ -1,7 +1,12 @@
 import unittest
 
 from src.htmlnode import LeafNode
-from src.textnode import TextNode, TextType, text_node_to_html_node
+from src.textnode import (
+    TextNode,
+    TextType,
+    split_nodes_delimiter,
+    text_node_to_html_node,
+)
 
 
 class TestTextNode(unittest.TestCase):
@@ -82,6 +87,70 @@ class TestTextNodeToHtmlNode(unittest.TestCase):
     def test_unknown_type(self):
         node = TextNode("This is an image node", "unknown")  # type: ignore
         self.assertRaises(ValueError, text_node_to_html_node, node)
+
+
+class TestSplitNodesDelimiter(unittest.TestCase):
+    def test_without_delimiter(self):
+        node = TextNode("This is a text node", TextType.TEXT)
+        self.assertEqual([node], split_nodes_delimiter([node], "*", TextType.ITALIC))
+
+    def test_with_odd_delimiters(self):
+        node = TextNode("This is *a text node", TextType.TEXT)
+        self.assertRaises(
+            ValueError, split_nodes_delimiter, [node], "*", TextType.ITALIC
+        )
+
+    def test_with_odd_delimiters2(self):
+        node = TextNode("This is *a* *text node", TextType.TEXT)
+        self.assertRaises(
+            ValueError, split_nodes_delimiter, [node], "*", TextType.ITALIC
+        )
+
+    def test_even_delimiter(self):
+        node = TextNode("This is *a* text node", TextType.TEXT)
+        self.assertEqual(
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("a", TextType.ITALIC),
+                TextNode(" text node", TextType.TEXT),
+            ],
+            split_nodes_delimiter([node], "*", TextType.ITALIC),
+        )
+
+    def test_even_delimiter2(self):
+        node = TextNode("This is *a* *text* node", TextType.TEXT)
+        self.assertEqual(
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("a", TextType.ITALIC),
+                TextNode(" ", TextType.TEXT),
+                TextNode("text", TextType.ITALIC),
+                TextNode(" node", TextType.TEXT),
+            ],
+            split_nodes_delimiter([node], "*", TextType.ITALIC),
+        )
+
+    def test_longer_delimiter(self):
+        node = TextNode("This is a **text** node", TextType.TEXT)
+        self.assertEqual(
+            [
+                TextNode("This is a ", TextType.TEXT),
+                TextNode("text", TextType.BOLD),
+                TextNode(" node", TextType.TEXT),
+            ],
+            split_nodes_delimiter([node], "**", TextType.BOLD),
+        )
+
+    def test_multiworld(self):
+        node = TextNode("This `is a code` node", TextType.TEXT)
+        self.assertEqual(
+            [
+                TextNode("This ", TextType.TEXT),
+                TextNode("is a code", TextType.CODE),
+                TextNode(" node", TextType.TEXT),
+            ],
+            split_nodes_delimiter([node], "`", TextType.CODE),
+        )
 
 
 if __name__ == "__main__":
