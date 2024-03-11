@@ -141,7 +141,7 @@ class TestSplitNodesDelimiter(unittest.TestCase):
             split_nodes_delimiter([node], "**", TextType.BOLD),
         )
 
-    def test_multiworld(self):
+    def test_multiword(self):
         node = TextNode("This `is a code` node", TextType.TEXT)
         self.assertEqual(
             [
