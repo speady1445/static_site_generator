@@ -4,6 +4,8 @@ from src.htmlnode import LeafNode
 from src.textnode import (
     TextNode,
     TextType,
+    extract_markdown_images,
+    extract_markdown_links,
     split_nodes_delimiter,
     text_node_to_html_node,
 )
@@ -150,6 +152,36 @@ class TestSplitNodesDelimiter(unittest.TestCase):
                 TextNode(" node", TextType.TEXT),
             ],
             split_nodes_delimiter([node], "`", TextType.CODE),
+        )
+
+
+class TestMarkdownExtractions(unittest.TestCase):
+    def test_images(self):
+        self.assertEqual(
+            extract_markdown_images(
+                (
+                    "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and"
+                    " ![another](https://i.imgur.com/dfsdkjfd.png)"
+                )
+            ),
+            [
+                ("image", "https://i.imgur.com/zjjcJKZ.png"),
+                ("another", "https://i.imgur.com/dfsdkjfd.png"),
+            ],
+        )
+
+    def test_links(self):
+        self.assertEqual(
+            extract_markdown_links(
+                (
+                    "This is text with a [link](https://www.example.com) and"
+                    " [another](https://www.example.com/another)"
+                )
+            ),
+            [
+                ("link", "https://www.example.com"),
+                ("another", "https://www.example.com/another"),
+            ],
         )
 
 
