@@ -3,6 +3,7 @@ import unittest
 from src.markdown_processing import (
     extract_markdown_images,
     extract_markdown_links,
+    markdown_to_blocks,
     split_nodes_delimiter,
     split_nodes_image,
     split_nodes_link,
@@ -217,5 +218,48 @@ class TestTextToTextnode(unittest.TestCase):
                 TextNode(" and a ", TextType.TEXT),
                 TextNode("link", TextType.LINK, "https://boot.dev"),
                 TextNode(". And some more.", TextType.TEXT),
+            ],
+        )
+
+
+class TestMarkdownToBlocks(unittest.TestCase):
+    def test_three_blocks(self):
+        text = """
+This is **bolded** paragraph
+
+This is another paragraph with *italic* text and `code` here
+This is the same paragraph on a new line
+
+* This is a list
+* with items
+"""
+        self.assertEqual(
+            markdown_to_blocks(text),
+            [
+                "This is **bolded** paragraph",
+                (
+                    "This is another paragraph with *italic* text and `code` here\n"
+                    "This is the same paragraph on a new line"
+                ),
+                "* This is a list\n* with items",
+            ],
+        )
+
+    def test_excesive_newlines(self):
+        text = """
+This is **bolded** paragraph
+
+
+
+
+
+
+This is another paragraph with *italic* text and `code` here
+"""
+        self.assertEqual(
+            markdown_to_blocks(text),
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with *italic* text and `code` here",
             ],
         )
