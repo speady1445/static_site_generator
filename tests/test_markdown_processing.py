@@ -6,6 +6,7 @@ from src.markdown_processing import (
     split_nodes_delimiter,
     split_nodes_image,
     split_nodes_link,
+    text_to_textnode,
 )
 from src.textnode import TextNode, TextType
 
@@ -188,5 +189,33 @@ class TestSplitLink(unittest.TestCase):
                 TextNode(" and ", TextType.TEXT),
                 TextNode("second", TextType.LINK, "https://some.img.com/def.png"),
                 TextNode(" is text", TextType.TEXT),
+            ],
+        )
+
+
+class TestTextToTextnode(unittest.TestCase):
+    def test_empty(self):
+        self.assertEqual(text_to_textnode(""), [TextNode("", TextType.TEXT)])
+
+    def test_everything(self):
+        text = (
+            "This is **text** with an *italic* word"
+            " and a `code block` and an ![image](https://i.imgur.com/zjjcJKZ.png)"
+            " and a [link](https://boot.dev). And some more."
+        )
+        self.assertEqual(
+            text_to_textnode(text),
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("text", TextType.BOLD),
+                TextNode(" with an ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.TEXT),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.TEXT),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+                TextNode(". And some more.", TextType.TEXT),
             ],
         )
