@@ -161,3 +161,6 @@ cython_debug/
 
 # VS code
 .vscode
+
+# part of project
+public/
