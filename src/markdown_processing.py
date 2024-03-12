@@ -1,7 +1,8 @@
 import re
 from enum import Enum, auto
 
-from .textnode import TextNode, TextType
+from .htmlnode import HTMLNode, ParentNode
+from .textnode import TextNode, TextType, text_node_to_html_node
 
 
 class BlockType(Enum):
@@ -89,7 +90,7 @@ def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
     return new_nodes
 
 
-def text_to_textnode(text: str) -> list[TextNode]:
+def text_to_textnodes(text: str) -> list[TextNode]:
     nodes = [TextNode(text, TextType.TEXT)]
     for delimiter, type in (
         ("**", TextType.BOLD),
@@ -144,3 +145,58 @@ def block_to_block_type(block: str) -> BlockType:
             i += 1
         return BlockType.ORDERED_LIST
     return BlockType.PARAGRAPH
+
+
+def markdown_block_to_html_node(tag: str, markdown: str) -> ParentNode:
+    return ParentNode(
+        tag, [text_node_to_html_node(x) for x in text_to_textnodes(markdown)]
+    )
+
+
+def heading_to_html_node(heading: str) -> ParentNode:
+    tag_text, text = heading.split(" ", 1)
+    tag = f"h{len(tag_text)}"
+    return markdown_block_to_html_node(tag, text)
+
+
+def code_to_html_node(code: str) -> ParentNode:
+    text = code[3:-3]
+    return ParentNode("pre", [markdown_block_to_html_node("code", text)])
+
+
+def quote_to_html_node(quote: str) -> ParentNode:
+    text = " ".join([s[2:] for s in quote.split("\n")])
+    return markdown_block_to_html_node("blockquote", text)
+
+
+def unordered_list_to_html_node(unordered_list: str) -> ParentNode:
+    items = [s[2:] for s in unordered_list.split("\n")]
+    return ParentNode("ul", [markdown_block_to_html_node("li", item) for item in items])
+
+
+def ordered_list_to_html_node(ordered_list: str) -> ParentNode:
+    items = [s[s.find(" ") + 1 :] for s in ordered_list.split("\n")]
+    return ParentNode("ol", [markdown_block_to_html_node("li", item) for item in items])
+
+
+def paragraph_to_htmlnode(paragraph: str) -> ParentNode:
+    return markdown_block_to_html_node("p", " ".join(paragraph.split("\n")))
+
+
+def markdown_to_html_node(markdown: str) -> ParentNode:
+    nodes = []
+    for block in markdown_to_blocks(markdown):
+        block_type = block_to_block_type(block)
+        if block_type is BlockType.HEADING:
+            nodes.append(heading_to_html_node(block))
+        elif block_type is BlockType.CODE:
+            nodes.append(code_to_html_node(block))
+        elif block_type is BlockType.QUOTE:
+            nodes.append(quote_to_html_node(block))
+        elif block_type is BlockType.UNORDERED_LIST:
+            nodes.append(unordered_list_to_html_node(block))
+        elif block_type is BlockType.ORDERED_LIST:
+            nodes.append(ordered_list_to_html_node(block))
+        else:
+            nodes.append(paragraph_to_htmlnode(block))
+    return ParentNode("div", nodes)

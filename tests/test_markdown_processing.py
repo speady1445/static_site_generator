@@ -6,10 +6,11 @@ from src.markdown_processing import (
     extract_markdown_images,
     extract_markdown_links,
     markdown_to_blocks,
+    markdown_to_html_node,
     split_nodes_delimiter,
     split_nodes_image,
     split_nodes_link,
-    text_to_textnode,
+    text_to_textnodes,
 )
 from src.textnode import TextNode, TextType
 
@@ -198,7 +199,7 @@ class TestSplitLink(unittest.TestCase):
 
 class TestTextToTextnode(unittest.TestCase):
     def test_empty(self):
-        self.assertEqual(text_to_textnode(""), [TextNode("", TextType.TEXT)])
+        self.assertEqual(text_to_textnodes(""), [TextNode("", TextType.TEXT)])
 
     def test_everything(self):
         text = (
@@ -207,7 +208,7 @@ class TestTextToTextnode(unittest.TestCase):
             " and a [link](https://boot.dev). And some more."
         )
         self.assertEqual(
-            text_to_textnode(text),
+            text_to_textnodes(text),
             [
                 TextNode("This is ", TextType.TEXT),
                 TextNode("text", TextType.BOLD),
@@ -326,4 +327,106 @@ class TestBlockToBlockType(unittest.TestCase):
         self.assertEqual(
             block_to_block_type("2. This is an ordered list\n1. with items"),
             BlockType.PARAGRAPH,
+        )
+
+
+class TestMarkdownToHtmlNode(unittest.TestCase):
+    def test_paragraph(self):
+        md = """
+This is **bolded** paragraph
+text in a p
+tag here
+
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p></div>",
+        )
+
+    def test_paragraphs(self):
+        md = """
+This is **bolded** paragraph
+text in a p
+tag here
+
+This is another paragraph with *italic* text and `code` here
+
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            (
+                "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p>"
+                "<p>This is another paragraph with <i>italic</i> text and"
+                " <code>code</code> here</p></div>"
+            ),
+        )
+
+    def test_lists(self):
+        md = """
+- This is a list
+- with items
+- and *more* items
+
+1. This is an `ordered` list
+2. with items
+3. and more items
+
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            (
+                "<div><ul><li>This is a list</li><li>with items</li><li>and <i>more</i>"
+                " items</li></ul><ol><li>This is an <code>ordered</code> list</li>"
+                "<li>with items</li><li>and more items</li></ol></div>"
+            ),
+        )
+
+    def test_headings(self):
+        md = """
+# this is an h1
+
+this is paragraph text
+
+## this is an h2
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            (
+                "<div><h1>this is an h1</h1><p>this is paragraph text</p>"
+                "<h2>this is an h2</h2></div>"
+            ),
+        )
+
+    def test_blockquote(self):
+        md = """
+> This is a
+> blockquote block
+
+this is paragraph text
+
+```This is code.```
+
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            (
+                "<div><blockquote>This is a blockquote block</blockquote>"
+                "<p>this is paragraph text</p>"
+                "<pre><code>This is code.</code></pre></div>"
+            ),
         )
