@@ -1,6 +1,16 @@
 import re
+from enum import Enum, auto
 
 from .textnode import TextNode, TextType
+
+
+class BlockType(Enum):
+    PARAGRAPH = auto()
+    HEADING = auto()
+    CODE = auto()
+    QUOTE = auto()
+    UNORDERED_LIST = auto()
+    ORDERED_LIST = auto()
 
 
 def split_nodes_delimiter(
@@ -96,3 +106,41 @@ def text_to_textnode(text: str) -> list[TextNode]:
 
 def markdown_to_blocks(markdown: str) -> list[str]:
     return [s.strip() for s in markdown.split("\n\n") if s != ""]
+
+
+def block_to_block_type(block: str) -> BlockType:
+    lines = block.split("\n")
+    if (
+        block.startswith("# ")
+        or block.startswith("## ")
+        or block.startswith("### ")
+        or block.startswith("#### ")
+        or block.startswith("##### ")
+        or block.startswith("###### ")
+    ):
+        return BlockType.HEADING
+    if block.startswith("```") and block.endswith("```"):
+        return BlockType.CODE
+    if block.startswith(">"):
+        for line in lines:
+            if not line.startswith(">"):
+                return BlockType.PARAGRAPH
+        return BlockType.QUOTE
+    if block.startswith("* "):
+        for line in lines:
+            if not line.startswith("* "):
+                return BlockType.PARAGRAPH
+        return BlockType.UNORDERED_LIST
+    if block.startswith("- "):
+        for line in lines:
+            if not line.startswith("- "):
+                return BlockType.PARAGRAPH
+        return BlockType.UNORDERED_LIST
+    if block.startswith("1. "):
+        i = 1
+        for line in lines:
+            if not line.startswith(f"{i}. "):
+                return BlockType.PARAGRAPH
+            i += 1
+        return BlockType.ORDERED_LIST
+    return BlockType.PARAGRAPH
