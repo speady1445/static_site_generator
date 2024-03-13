@@ -4,12 +4,16 @@ from pathlib import Path
 
 from markdown_processing import extract_title, markdown_to_html_node
 
-PUBLIC_FOLDER = Path("./public")
-STATIC_FOLDER = Path("./static")
+ROOT_FOLDER = Path("./")
+PUBLIC_FOLDER = ROOT_FOLDER / "public"
+STATIC_FOLDER = ROOT_FOLDER / "static"
+CONTENT_FOLDER = ROOT_FOLDER / "content"
+HTML_TEMPLATE = ROOT_FOLDER / "template.html"
 
 
 def main() -> None:
     copy_static_to_public()
+    generate_pages_recursive(CONTENT_FOLDER, HTML_TEMPLATE, PUBLIC_FOLDER)
 
 
 def copy_static_to_public() -> None:
@@ -45,7 +49,20 @@ def copy_folder(source: Path, destination: Path) -> None:
             copy_folder(file, sub_destination)
 
 
-def generate_page(from_path: Path, template_path: Path, dest_path: Path):
+def generate_pages_recursive(
+    dir_content: Path, template_path: Path, dest_dir: Path
+) -> None:
+    files = dir_content.glob("*")
+    for file in files:
+        if file.is_file():
+            if file.suffix == ".md":
+                new_file = dest_dir / (file.stem + ".html")
+                generate_page(file, template_path, new_file)
+        else:
+            generate_pages_recursive(file, template_path, dest_dir / file.name)
+
+
+def generate_page(from_path: Path, template_path: Path, dest_path: Path) -> None:
     print(
         f"Generating page from '{from_path}' to '{dest_path}' using '{template_path}'"
     )
