@@ -4,8 +4,8 @@ from pathlib import Path
 
 from markdown_processing import extract_title, markdown_to_html_node
 
-PUBLIC_FOLDER = Path("public")
-STATIC_FOLDER = Path("static")
+PUBLIC_FOLDER = Path("./public")
+STATIC_FOLDER = Path("./static")
 
 
 def main() -> None:

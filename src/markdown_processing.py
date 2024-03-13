@@ -1,8 +1,8 @@
 import re
 from enum import Enum, auto
 
-from .htmlnode import HTMLNode, ParentNode
-from .textnode import TextNode, TextType, text_node_to_html_node
+from htmlnode import ParentNode
+from textnode import TextNode, TextType, text_node_to_html_node
 
 
 class BlockType(Enum):
