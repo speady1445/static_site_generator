@@ -5,6 +5,7 @@ from src.markdown_processing import (
     block_to_block_type,
     extract_markdown_images,
     extract_markdown_links,
+    extract_title,
     markdown_to_blocks,
     markdown_to_html_node,
     split_nodes_delimiter,
@@ -430,3 +431,16 @@ this is paragraph text
                 "<pre><code>This is code.</code></pre></div>"
             ),
         )
+
+
+class TestExtractTitle(unittest.TestCase):
+    def test_no_title(self):
+        self.assertRaises(ValueError, extract_title, "No title here")
+
+    def test_title_found(self):
+        text = """
+# This is the title
+
+This is the body
+"""
+        self.assertEqual(extract_title(text), "This is the title")

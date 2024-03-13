@@ -200,3 +200,11 @@ def markdown_to_html_node(markdown: str) -> ParentNode:
         else:
             nodes.append(paragraph_to_htmlnode(block))
     return ParentNode("div", nodes)
+
+
+def extract_title(markdown: str) -> str:
+    blocks = markdown_to_blocks(markdown)
+    for block in blocks:
+        if block.startswith("# "):
+            return block[2:]
+    raise ValueError("Markdown does not contain a title")
